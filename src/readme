@@ -1,0 +1,80 @@
+import React, { useState, useEffect } from 'react';
+import PersonalInfo from './components/PersonalInfo';
+import AddressInfo from './components/AddressInfo';
+import AccountInfo from './components/AccountInfo';
+import Preferences from './components/Preferences';
+import AdditionalInfo from './components/AdditionalInfo';
+import Review from './components/Review';
+import { Container, Button, Stepper, Step, StepLabel, Box, Typography } from '@mui/material';
+
+const steps = ['Personal Info', 'Address Info', 'Account Info', 'Preferences', 'Additional Info', 'Review'];
+
+function App() {
+  const [activeStep, setActiveStep] = useState(0);
+  const [formData, setFormData] = useState({
+    personal: {},
+    address: {},
+    account: {},
+    preferences: {},
+    additional: {},
+  });
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // Load saved form data from localStorage on mount
+  useEffect(() => {
+    const savedData = localStorage.getItem('multiStepFormData');
+    if (savedData) {
+      setFormData(JSON.parse(savedData));
+    }
+  }, []);
+
+  // Save form data to localStorage when formData changes
+  useEffect(() => {
+    localStorage.setItem('multiStepFormData', JSON.stringify(formData));
+  }, [formData]);
+
+  const handleNext = (data) => {
+    setFormData((prev) => ({ ...prev, ...data }));
+    setActiveStep((prevStep) => prevStep + 1);
+  };
+
+  const handleBack = () => {
+    setActiveStep((prevStep) => prevStep - 1);
+  };
+
+  const handleSubmit = () => {
+    localStorage.setItem('multiStepFormData', JSON.stringify(formData));
+    setIsSubmitted(true);
+    localStorage.removeItem('multiStepFormData'); // Clear the storage after successful submission
+  };
+
+  return (
+    <Container>
+      {isSubmitted ? (
+        <Typography variant="h5" align="center" mt={4} color="green">
+          Form submitted successfully! 🎉
+        </Typography>
+      ) : (
+        <>
+          <Stepper activeStep={activeStep} alternativeLabel>
+            {steps.map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+          <Box mt={4}>
+            {activeStep === 0 && <PersonalInfo onNext={handleNext} formData={formData.personal} />}
+            {activeStep === 1 && <AddressInfo onNext={handleNext} onBack={handleBack} formData={formData.address} />}
+            {activeStep === 2 && <AccountInfo onNext={handleNext} onBack={handleBack} formData={formData.account} />}
+            {activeStep === 3 && <Preferences onNext={handleNext} onBack={handleBack} formData={formData.preferences} />}
+            {activeStep === 4 && <AdditionalInfo onNext={handleNext} onBack={handleBack} formData={formData.additional} />}
+            {activeStep === 5 && <Review formData={formData} onBack={handleBack} onSubmit={handleSubmit} />}
+          </Box>
+        </>
+      )}
+    </Container>
+  );
+}
+
+export default App;
